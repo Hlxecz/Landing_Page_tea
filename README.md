@@ -21,15 +21,19 @@
 
 ## 🛠 기술 스택
 
-| 분류 | 기술 |
-|---|---|
-| **AI 영상 제작** | ElevenLabs |
-| **Frontend** | HTML, CSS, JavaScript |
-| **애니메이션** | GSAP, ScrollTrigger |
-| **렌더링** | Canvas API, ImageBitmap |
-| **서버** | Node.js, Express |
+| 분류             | 기술                    |
+| ---------------- | ----------------------- |
+| **AI 영상 제작** | ElevenLabs              |
+| **Frontend**     | HTML, CSS, JavaScript   |
+| **애니메이션**   | GSAP, ScrollTrigger     |
+| **렌더링**       | Canvas API, ImageBitmap |
+| **서버**         | Node.js, Express        |
 
-## 🚀 실행 방법
+## 🚀 라이브 데모 (배포)
+
+🔗 **Vercel 배포 완료:** [https://assamtea-rose.vercel.app/](https://assamtea-rose.vercel.app/)
+
+## 💻 로컬 실행 방법
 
 ```bash
 npm install

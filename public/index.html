@@ -503,8 +503,8 @@
     <span class="f-logo">ASSAM TEA</span>
     <span class="f-copy">© 2026 Assam Tea. Rooted in the hills.</span>
     <span class="f-links">
-      <a href="#">Instagram</a>
-      <a href="#">YouTube</a>
+      <a href="https://www.instagram.com/hlxecz/" target="_blank">Instagram</a>
+      <a href="https://github.com/Hlxecz/Landing_Page_tea" target="_blank">GitHub</a>
     </span>
   </footer>
 
@@ -523,14 +523,16 @@
       const overlayTagline = document.getElementById('overlay-tagline');
       const scrollFill = document.getElementById('scroll-fill');
 
-      const TOTAL_FRAMES = 150;
+      const isMobile = window.innerWidth <= 768;
+      const TOTAL_FRAMES = isMobile ? 60 : 150;
       let frames = [];
       let currentFrame = -1;
       let rafId = null;
 
       function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = window.innerWidth * dpr;
+        canvas.height = window.innerHeight * dpr;
         if (currentFrame >= 0 && currentFrame < frames.length) drawFrame(currentFrame);
       }
       window.addEventListener('resize', resizeCanvas);
@@ -539,7 +541,7 @@
       // Extract 150 frames using 4 parallel video workers for ~4x speed
       function extractFrames() {
         return new Promise((resolve) => {
-          const WORKERS = 4;
+          const WORKERS = isMobile ? 2 : 4;
           const chunkSize = Math.ceil(TOTAL_FRAMES / WORKERS);
           let completed = 0;
           let totalCompleted = 0;
@@ -559,8 +561,14 @@
 
             loaderText.textContent = 'Extracting frames...';
 
-            // Target resolution for faster bitmap creation
-            const targetWidth = Math.min(960, window.innerWidth);
+            // Dynamic resolution based on screen size and orientation (capped at 1080 for memory safety)
+            const dpr = window.devicePixelRatio || 1;
+            const maxDim = Math.max(window.innerWidth, window.innerHeight) * dpr;
+            const targetDim = Math.min(Math.round(maxDim), 1080);
+            const isPortrait = window.innerHeight > window.innerWidth;
+            const resizeOpts = isPortrait 
+              ? { resizeHeight: targetDim, resizeQuality: 'high' } 
+              : { resizeWidth: targetDim, resizeQuality: 'high' };
 
             for (let w = 0; w < WORKERS; w++) {
               const start = w * chunkSize;
@@ -570,19 +578,17 @@
               const video = document.createElement('video');
               video.src = 'tea-story-fianl.mp4';
               video.muted = true;
-              video.playsInline = true;
-              video.preload = 'auto';
+              // iOS requires the video to be in the DOM sometimes to fetch data reliably
+              video.style.display = 'none';
+              document.body.appendChild(video);
 
-              video.addEventListener('canplaythrough', async () => {
+              const startWorker = async () => {
                 for (let i = start; i < end; i++) {
                   await new Promise(r => {
                     const onSeeked = async () => {
                       video.removeEventListener('seeked', onSeeked);
                       try {
-                        const bmp = await createImageBitmap(video, {
-                          resizeWidth: targetWidth,
-                          resizeQuality: 'medium'
-                        });
+                        const bmp = await createImageBitmap(video, resizeOpts);
                         frames[i] = bmp;
                       } catch (e) {
                         frames[i] = null;
@@ -600,7 +606,10 @@
                 video.remove();
                 completed++;
                 if (completed === WORKERS) resolve();
-              }, { once: true });
+              };
+
+              video.addEventListener('loadedmetadata', startWorker, { once: true });
+              video.load(); // Force load for iOS
 
               video.addEventListener('error', () => {
                 video.remove();
